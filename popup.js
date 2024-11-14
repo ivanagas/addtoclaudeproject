@@ -38,6 +38,31 @@ const makeRequest = async (url, options = {}) => {
   }
 };
 
+// Save form state
+const saveFormState = async () => {
+  const formState = {
+    selectedProject: document.getElementById('project').value,
+    fileName: document.getElementById('fileName').value,
+    content: document.getElementById('content').value
+  };
+  await chrome.storage.local.set({ formState });
+};
+
+// Load form state
+const loadFormState = async () => {
+  const data = await chrome.storage.local.get('formState');
+  if (data.formState) {
+    const { fileName, content } = data.formState;
+    document.getElementById('fileName').value = fileName || '';
+    document.getElementById('content').value = content || '';
+  }
+};
+
+// Add input event listeners to save state as user types
+document.getElementById('fileName').addEventListener('input', saveFormState);
+document.getElementById('content').addEventListener('input', saveFormState);
+document.getElementById('project').addEventListener('change', saveFormState);
+
 document.getElementById('project').addEventListener('change', (e) => {
   const projectLink = document.getElementById('projectLink');
   projectLink.href = `https://claude.ai/project/${e.target.value}`;
@@ -92,8 +117,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await chrome.storage.local.get('sessionKey');
     if (data.sessionKey) {
       document.getElementById('sessionKey').value = data.sessionKey;
-      // Don't automatically load projects - let user click button
+
+      // If we have a session key, try to load projects automatically
+      document.getElementById('saveKey').click();
     }
+
+    setTimeout(loadFormState, 500);
   } catch (error) {
     showMessage(error.message, true);
   }
@@ -119,9 +148,10 @@ document.getElementById('submit').addEventListener('click', async () => {
       }
     );
 
-    // Clear form
+    // Clear form and saved state
     document.getElementById('fileName').value = '';
     document.getElementById('content').value = '';
+    await chrome.storage.local.remove('formState');
     
     showMessage('Content added successfully!');
   } catch (error) {
