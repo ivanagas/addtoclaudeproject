@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Add to Claude project",
+  "version": "1.0",
+  "description": "Easily add content to Claude projects from any website",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://claude.ai/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
