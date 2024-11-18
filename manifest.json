@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Add to Claude project",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Easily add content to Claude projects from any website",
   "icons": {
     "16": "icon16.png",

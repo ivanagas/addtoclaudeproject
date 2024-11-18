@@ -41,20 +41,29 @@ const makeRequest = async (url, options = {}) => {
 // Save form state
 const saveFormState = async () => {
   const formState = {
-    selectedProject: document.getElementById('project').value,
+    projectUuid: document.getElementById('project').value,
     fileName: document.getElementById('fileName').value,
     content: document.getElementById('content').value
   };
   await chrome.storage.local.set({ formState });
 };
 
-// Load form state
+// Load form state and set project if available
 const loadFormState = async () => {
   const data = await chrome.storage.local.get('formState');
   if (data.formState) {
-    const { fileName, content } = data.formState;
+    const { fileName, content, projectUuid } = data.formState;
     document.getElementById('fileName').value = fileName || '';
     document.getElementById('content').value = content || '';
+    
+    // Only set project if it exists in the dropdown
+    const projectSelect = document.getElementById('project');
+    if (projectUuid && projectSelect.querySelector(`option[value="${projectUuid}"]`)) {
+      projectSelect.value = projectUuid;
+      // Update project link
+      const projectLink = document.getElementById('projectLink');
+      projectLink.href = `https://claude.ai/project/${projectUuid}`;
+    }
   }
 };
 
@@ -93,8 +102,11 @@ document.getElementById('saveKey').addEventListener('click', async () => {
       .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically
       .map(project => `<option value="${project.uuid}">${project.name}</option>`)
       .join('');
+
+    // Load saved form state after populating projects
+    await loadFormState();
     
-    // Set initial project link
+    // Set project link (will use saved project if available)
     const projectLink = document.getElementById('projectLink');
     projectLink.href = `https://claude.ai/project/${select.value}`;
 
@@ -121,8 +133,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // If we have a session key, try to load projects automatically
       document.getElementById('saveKey').click();
     }
-
-    setTimeout(loadFormState, 500);
   } catch (error) {
     showMessage(error.message, true);
   }
@@ -151,9 +161,9 @@ document.getElementById('submit').addEventListener('click', async () => {
     // Clear form and saved state
     document.getElementById('fileName').value = '';
     document.getElementById('content').value = '';
-    await chrome.storage.local.remove('formState');
     
-    showMessage('Content added successfully!');
+    await saveFormState();
+   
   } catch (error) {
     showMessage(error.message, true);
   }
